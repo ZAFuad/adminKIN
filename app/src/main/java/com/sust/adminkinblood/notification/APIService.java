@@ -1,7 +1,5 @@
 package com.sust.adminkinblood.notification;
 
-import android.util.Log;
-
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.Headers;

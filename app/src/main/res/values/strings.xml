@@ -1,4 +1,5 @@
 <resources>
-    <string name="app_name">Admin Kin Blood</string>
+    <string name="app_name">Admin KIN Blood</string>
     <string name="blood_group_and_place">Blood_Group+/- and Place</string>
+    <string name="default_notification_channel_id">Requests Channel</string>
 </resources>

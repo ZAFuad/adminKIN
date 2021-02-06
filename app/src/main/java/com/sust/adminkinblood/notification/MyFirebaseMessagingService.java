@@ -3,7 +3,7 @@ package com.sust.adminkinblood.notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
-import android.net.Uri;
+import android.widget.Toast;
 
 
 import androidx.annotation.NonNull;
@@ -12,7 +12,7 @@ import androidx.core.app.NotificationCompat;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.sust.adminkinblood.R;
@@ -22,18 +22,19 @@ import java.util.Random;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
-    private String bloodGroup, hospital, newOrCancel;
-
 
     @Override
     public void onNewToken(@NonNull String s) {
         super.onNewToken(s);
-
-        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        String refreshToken = FirebaseInstanceId.getInstance().getToken();
-        if (firebaseUser != null) {
-            updateToken(refreshToken);
-        }
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()){
+                        String refreshToken = task.getResult();
+                        updateToken(refreshToken);
+                    } else {
+                        Toast.makeText(this, "FCM token receive failed", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
 
@@ -43,9 +44,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         Random random = new Random();
 
-        bloodGroup = remoteMessage.getData().get("bloodGroup");
-        hospital = remoteMessage.getData().get("donorHaveToGoLocationName");
-        newOrCancel = remoteMessage.getData().get("newOrCancel");
+        String bloodGroup = remoteMessage.getData().get("bloodGroup");
+        String hospital = remoteMessage.getData().get("donorHaveToGoLocationName");
+        String newOrCancel = remoteMessage.getData().get("newOrCancel");
 
         Intent intent = new Intent(this, Requests.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 6969, intent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -100,6 +101,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private void updateToken(String refreshToken) {
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         Token token = new Token(refreshToken);
+        assert firebaseUser != null;
         FirebaseDatabase.getInstance().getReference().child("Tokens").child("Admins").child(firebaseUser.getUid()).setValue(token);
     }
 

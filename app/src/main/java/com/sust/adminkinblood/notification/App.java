@@ -1,6 +1,5 @@
 package com.sust.adminkinblood.notification;
 
-import android.annotation.SuppressLint;
 import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;

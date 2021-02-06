@@ -13,7 +13,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.sust.adminkinblood.notification.Token;
 
 
@@ -92,9 +92,17 @@ public class Home extends AppCompatActivity {
 
     private void updateToken() {
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        String refreshToken = FirebaseInstanceId.getInstance().getToken();
-        Token token = new Token(refreshToken);
-        assert firebaseUser != null;
-        FirebaseDatabase.getInstance().getReference("Tokens").child("Admins").child(firebaseUser.getUid()).setValue(token);
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()){
+                        String refreshToken = task.getResult();
+                        Token token = new Token(refreshToken);
+                        assert firebaseUser != null;
+                        FirebaseDatabase.getInstance().getReference("Tokens").child("Admins").child(firebaseUser.getUid()).setValue(token);
+                    } else {
+                        Toast.makeText(this, "FCM token receive failed", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
     }
 }

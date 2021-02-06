@@ -126,7 +126,7 @@ public class DonorSearchActivity extends AppCompatActivity implements AdapterCla
                 for (DocumentSnapshot d : myList) {
                     Dnr_Healper dnr = d.toObject(Dnr_Healper.class);
 
-                    if (dnr.getDonorStatus() != null && dnr.getDonorStatus().equals("positive") && dnr.isAvailable()) { // Add your conditions here
+                    if (dnr.getDonorStatus().equals("positive") && dnr.isAvailable() && !dnr.isDonating() && dnr.getRequestStatus().equals("negative")) {
                         // Toast.makeText(Donors.this,"positive held",Toast.LENGTH_SHORT).show();
                         dnr_list.add(dnr);
                     }
@@ -338,6 +338,8 @@ public class DonorSearchActivity extends AppCompatActivity implements AdapterCla
                 requesterUidForDonor.requestFocus();
                 return;
             }
+            btn_assign.setEnabled(false);
+            btn_assign.setBackgroundColor(getResources().getColor(R.color.red));
             COLLECTION_REFERENCE_REQUESTS.document(requesterUidForDonor_).get().addOnSuccessListener(documentSnapshot -> {
                 if (documentSnapshot.exists()) {
                     Rqst_Helper rqst_helper = documentSnapshot.toObject(Rqst_Helper.class);
@@ -350,19 +352,24 @@ public class DonorSearchActivity extends AppCompatActivity implements AdapterCla
                                         .document(uid).update("donating", true)
                                         .addOnSuccessListener(aVoid1 -> {
 
-                                            FirebaseDatabase.getInstance().getReference().child("Tokens").child(uid).addValueEventListener(new ValueEventListener() {
-                                                @Override
-                                                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                                    Map<String, String> hm = (Map<String, String>) snapshot.getValue();
-                                                    assert hm != null;
-                                                    sendNotifications(hm.get("token"), "assign");
-                                                }
+                                            if (list.get(i).getFormFactor().equals("nonApp")){
+                                                Toast.makeText(DonorSearchActivity.this, "Donor Assigned", Toast.LENGTH_SHORT).show();
+                                            } else {
+                                                FirebaseDatabase.getInstance().getReference().child("Tokens").child(uid).addValueEventListener(new ValueEventListener() {
+                                                    @Override
+                                                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                                        Map<String, String> hm = (Map<String, String>) snapshot.getValue();
+                                                        if (hm != null){
+                                                            sendNotifications(hm.get("token"), "assign");
+                                                        }
+                                                    }
 
-                                                @Override
-                                                public void onCancelled(@NonNull DatabaseError error) {
+                                                    @Override
+                                                    public void onCancelled(@NonNull DatabaseError error) {
 
-                                                }
-                                            });
+                                                    }
+                                                });
+                                            }
                                         }).addOnFailureListener(e -> Toast.makeText(DonorSearchActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show())).addOnFailureListener(e -> Toast.makeText(DonorSearchActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show());
                     } else {
                         Toast.makeText(DonorSearchActivity.this, "Error Occured!!!", Toast.LENGTH_SHORT).show();
@@ -373,47 +380,53 @@ public class DonorSearchActivity extends AppCompatActivity implements AdapterCla
             }).addOnFailureListener(e -> Toast.makeText(DonorSearchActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show());
         });
 
-        btn_notify_user.setOnClickListener(view -> COLLECTION_REFERENCE_REQUESTS
-                .document(requesterUidForDonor_)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    Map<String, Object> hm = new HashMap<>();
-                    hm.put("donorHaveToGoLatitude", documentSnapshot.getDouble("donorHaveToGoLatitude"));
-                    hm.put("donorHaveToGoLongitude", documentSnapshot.getDouble("donorHaveToGoLongitude"));
-                    hm.put("donorName", list.get(i).getFullName());
-                    hm.put("donorPhoneNumber", list.get(i).getPhoneNumber());
-                    hm.put("donorUID", uid);
+        btn_notify_user.setOnClickListener(view -> {
 
-                    COLLECTION_REFERENCE_DONORDATAFORUSER
+            btn_notify_user.setEnabled(false);
+            btn_notify_user.setBackgroundColor(getResources().getColor(R.color.red));
+            
+
+                    COLLECTION_REFERENCE_REQUESTS
                             .document(requesterUidForDonor_)
-                            .set(hm, SetOptions.merge())
-                            .addOnSuccessListener(aVoid12 -> COLLECTION_REFERENCE_REQUESTS
-                                    .document(requesterUidForDonor_)
-                                    .delete().addOnSuccessListener(aVoid1 -> {
-                                        Map<String, Object> hashMap = new HashMap<>();
-                                        hashMap.put("requestStatus", "positive");
-                                        COLLECTION_REFERENCE_USERS
+                            .get()
+                            .addOnSuccessListener(documentSnapshot -> {
+                                Map<String, Object> hm = new HashMap<>();
+                                hm.put("donorHaveToGoLatitude", documentSnapshot.getDouble("donorHaveToGoLatitude"));
+                                hm.put("donorHaveToGoLongitude", documentSnapshot.getDouble("donorHaveToGoLongitude"));
+                                hm.put("donorName", list.get(i).getFullName());
+                                hm.put("donorPhoneNumber", list.get(i).getPhoneNumber());
+                                hm.put("donorUID", uid);
+
+                                COLLECTION_REFERENCE_DONORDATAFORUSER
+                                        .document(requesterUidForDonor_)
+                                        .set(hm, SetOptions.merge())
+                                        .addOnSuccessListener(aVoid12 -> COLLECTION_REFERENCE_REQUESTS
                                                 .document(requesterUidForDonor_)
-                                                .set(hashMap, SetOptions.merge())
-                                                .addOnSuccessListener(aVoid2 -> {
-                                                    FirebaseDatabase.getInstance().getReference().child("Tokens").child(requesterUidForDonor_).addValueEventListener(new ValueEventListener() {
-                                                        @Override
-                                                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                                            Map<String, String> hm = (Map<String, String>) snapshot.getValue();
-                                                            assert hm != null;
-                                                            sendNotifications(hm.get("token"), "notify");
-                                                        }
+                                                .delete().addOnSuccessListener(aVoid1 -> {
+                                                    Map<String, Object> hashMap = new HashMap<>();
+                                                    hashMap.put("requestStatus", "positive");
+                                                    COLLECTION_REFERENCE_USERS
+                                                            .document(requesterUidForDonor_)
+                                                            .set(hashMap, SetOptions.merge())
+                                                            .addOnSuccessListener(aVoid2 -> {
+                                                                FirebaseDatabase.getInstance().getReference().child("Tokens").child(requesterUidForDonor_).addValueEventListener(new ValueEventListener() {
+                                                                    @Override
+                                                                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                                                        Map<String, String> hm = (Map<String, String>) snapshot.getValue();
+                                                                        assert hm != null;
+                                                                        sendNotifications(hm.get("token"), "notify");
+                                                                    }
 
-                                                        @Override
-                                                        public void onCancelled(@NonNull DatabaseError error) {
+                                                                    @Override
+                                                                    public void onCancelled(@NonNull DatabaseError error) {
 
-                                                        }
-                                                    });
-                                                }).addOnFailureListener(e -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show());
-                                    }).addOnFailureListener(e -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show()))
-                            .addOnFailureListener(e -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show());
-                }).addOnFailureListener(e -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show()));
-
+                                                                    }
+                                                                });
+                                                            }).addOnFailureListener(e -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show());
+                                                }).addOnFailureListener(e -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show()))
+                                        .addOnFailureListener(e -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show());
+                            }).addOnFailureListener(e -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show());
+        });
         donorinfo.show();
         Objects.requireNonNull(donorinfo.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
     }

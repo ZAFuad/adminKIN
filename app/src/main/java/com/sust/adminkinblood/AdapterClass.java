@@ -53,6 +53,7 @@ public class AdapterClass extends RecyclerView.Adapter<AdapterClass.ViewHolder> 
         holder.dnr_Name.setText(mData.get(i).getFullName());
         holder.bld_grp.setText(mData.get(i).getBloodGroup());
         holder.phn_num.setText(mData.get(i).getPhoneNumber());
+        holder.home_district.setText(mData.get(i).getHomeDistrict());
     }
 
     @Override
@@ -62,7 +63,7 @@ public class AdapterClass extends RecyclerView.Adapter<AdapterClass.ViewHolder> 
 
     class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        private TextView dnr_Name,bld_grp,phn_num;
+        private TextView dnr_Name,bld_grp,phn_num,home_district;
         private LinearLayout item_Donor;
         OnListListener onListListener;
 
@@ -75,6 +76,7 @@ public class AdapterClass extends RecyclerView.Adapter<AdapterClass.ViewHolder> 
             dnr_Name = itemView.findViewById(R.id.dnr_name);
             bld_grp = itemView.findViewById(R.id.bld_grp);
             phn_num= itemView.findViewById(R.id.phn_num);
+            home_district= itemView.findViewById(R.id.dnr_district);
 
             itemView.setOnClickListener(this);
         }

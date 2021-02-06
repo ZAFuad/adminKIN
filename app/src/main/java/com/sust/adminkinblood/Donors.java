@@ -63,7 +63,7 @@ import retrofit2.Response;
 
 import static android.Manifest.permission.CALL_PHONE;
 
-public class Donors extends AppCompatActivity implements AdapterClass.OnListListener {
+public class   Donors extends AppCompatActivity implements AdapterClass.OnListListener {
 
 
     private static final String TAG = "Donor Activity";
@@ -119,14 +119,14 @@ public class Donors extends AppCompatActivity implements AdapterClass.OnListList
 
                     //  if(dnr.getDonorStatus() != null)
 
-                    if (dnr.getDonorStatus().equals("positive") && dnr.isAvailable()) {
+                    if (dnr.getDonorStatus().equals("positive") && dnr.isAvailable() && !dnr.isDonating() && dnr.getRequestStatus().equals("negative")) {
                         // Toast.makeText(Donors.this,"positive held",Toast.LENGTH_SHORT).show();
                         dnr_list.add(dnr);
                     }
                 }
                 adapterClass.notifyDataSetChanged();
                 String size = String.valueOf(dnr_list.size());
-                //Toast.makeText(Donors.this,size,Toast.LENGTH_SHORT).show();
+                Toast.makeText(Donors.this,size,Toast.LENGTH_SHORT).show();
 
             } else {
                 Toast.makeText(Donors.this, "Document does not exist", Toast.LENGTH_SHORT).show();
@@ -271,19 +271,23 @@ public class Donors extends AppCompatActivity implements AdapterClass.OnListList
                                         .document(uid).update("donating", true)
                                         .addOnSuccessListener(aVoid1 -> {
 
-                                            FirebaseDatabase.getInstance().getReference().child("Tokens").child(uid).addValueEventListener(new ValueEventListener() {
-                                                @Override
-                                                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                                    Map<String, String> hm = (Map<String, String>) snapshot.getValue();
-                                                    assert hm != null;
-                                                    sendNotifications(hm.get("token"), "assign");
-                                                }
+                                            if (dnr_list.get(i).getFormFactor().equals("nonApp")){
+                                                Toast.makeText(Donors.this, "Donor Assigned", Toast.LENGTH_SHORT).show();
+                                            } else {
+                                                FirebaseDatabase.getInstance().getReference().child("Tokens").child(uid).addValueEventListener(new ValueEventListener() {
+                                                    @Override
+                                                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                                        Map<String, String> hm = (Map<String, String>) snapshot.getValue();
+                                                        assert hm != null;
+                                                        sendNotifications(hm.get("token"), "assign");
+                                                    }
 
-                                                @Override
-                                                public void onCancelled(@NonNull DatabaseError error) {
+                                                    @Override
+                                                    public void onCancelled(@NonNull DatabaseError error) {
 
-                                                }
-                                            });
+                                                    }
+                                                });
+                                            }
                                         }).addOnFailureListener(e -> Toast.makeText(Donors.this, e.getMessage(), Toast.LENGTH_SHORT).show())).addOnFailureListener(e -> Toast.makeText(Donors.this, e.getMessage(), Toast.LENGTH_SHORT).show());
                     } else {
                         Toast.makeText(Donors.this, "Error Occured!!!", Toast.LENGTH_SHORT).show();

@@ -95,12 +95,7 @@ public class DonorSearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         vhItem.bld_grp.setText(bld_grp);
         vhItem.phn_num.setText(phn_num);
 
-        vhItem.item_Donor.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showDonorDialog(position, dnr_healpers);
-            }
-        });
+        vhItem.item_Donor.setOnClickListener(view -> showDonorDialog(position, dnr_healpers));
 
     }
 
